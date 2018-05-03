@@ -71,8 +71,9 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
             
             col3(q) = MyText{1,3}(p);    % stimulus
             col3(r) = color2code(log_file{1,4}(s));  % response
-            if(col3(r) == 500)
+            if(col3(r) == 500) % miss trial
                 outcome(s) = 500;  % otherwise outcome was just correct/incorrect
+                col1(r) = col1(r) + 1000* max(log_file{1,5}(:)); % because the reaction time for miss trial was coded as 0
             end
             
             col4(q) = MyText{1,4}{p}; % 'Trig'
@@ -152,7 +153,7 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     col5_trial = char(col5_trial);
     
     
-    filename = strcat(sub_IDs{i},'_aux_NoBad_AvgRef_UpdatedTrigs.evt');
+    filename = strcat('D:\Stroop\Temp\pre_sobi\',sub_IDs{i},'_aux_NoBad_AvgRef_UpdatedTrigs.evt');
     fid = fopen(filename,'w');
     fprintf(fid,'Tmu\tCode\tTriNo\tComnt\n');
 
@@ -162,7 +163,7 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     
     fclose(fid);
     
-    name = strcat(sub_IDs{i},'_old_triggers');
+    name = strcat('D:\Stroop\Temp\pre_sobi\', sub_IDs{i},'_orig_triggers');
     save(name,'old_triggers');
     
 end
