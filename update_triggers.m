@@ -7,7 +7,8 @@ sub_IDs = importdata('D:\Stroop\Temp\Subject_IDs.txt');
 num_sub = size(sub_IDs,1);
 cond = zeros(num_sub,1);
 
-% 8 condition sequences
+% 8 condition sequences. There are eight different orders of sequences and each has been assigned four columns in the excel file. The first column is
+% the condition{-1,0,-1} for trials, the second one is the block number [1-16], the third one as block type {-1,0,1}, and the fourth one as blank col
 conditions = importdata('D:\Stroop\Temp\conditions_sorted.xlsx');
 conditions = cell2mat(struct2cell(conditions));
 
@@ -20,7 +21,6 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     cond_num = C{1}{1}(29);  % finding condition number
     cond(i) = str2num(cond_num);
     
-    % finding 
     
     
     %link: https://www.mathworks.com/help/matlab/ref/textscan.html
@@ -96,8 +96,19 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     % storing old triggers
     old_triggers = col3;
     
-    % updating triggers
-    cond_seq = conditions(:,4*cond(i)-3) + conditions(:,4*cond(i)-1) + 203; % the sum of 1st two terms lead to -2(incongruent), -1 (neutral in incongruent), 0 (neutral in neutral), 1 (neutral in congruent), 2 congruent 
+    
+    % writing the corrected original trigger file where we have extracted
+    % the missing responses from the log file.
+    name = strcat('D:\Stroop\Temp\pre_sobi\', sub_IDs{i},'_orig_triggers');
+    save(name,'old_triggers');
+    
+    
+    % updating triggers. 
+    cond_seq = (conditions(:,4*cond(i)-3) + conditions(:,4*cond(i)-1) + 3)*1000; % the sum of 1st two terms lead to -2(incongruent), -1 (neutral in incongruent), 0 (neutral in neutral)
+    %, 1 (neutral in congruent), 2 congruent. After adding 3, now it will be 1000,2000,3000,4000,5000 
+    
+    %Now we will encode trial numbers in this sequence
+    cond_seq = cond_seq + repmat(1:128,1,2)';
     
     col3(1:2:end) = cond_seq;  % updating values for stimulus rows
     col3(2:2:end) = outcome;  % it accounts for none values as well
@@ -107,64 +118,21 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     col5 = char(col5); % reconversion otherwise there was a problem in print file
     
     
-    % adding trial triggers
-    n_rows = n_rows_log*4;  % for every trial, we have 4 triggers: block number, trial number, condition, response
-    
-    col1_trial = int32(zeros(n_rows, 1));
-    col2_trial = int32(zeros(n_rows, 1));
-    col3_trial = int32(zeros(n_rows, 1));
-    col4_trial = char(zeros(n_rows, 5));
-    col5_trial = char(zeros(n_rows, 3));
 
-    %copying values to new column vectors
-    for n = 1:256
-        j= 4*n -1;
-        k = 2*n-1;
-        col1_trial(j:j+1) = col1(k:k+1);
-        col2_trial(j:j+1) = col2(k:k+1);
-        col3_trial(j:j+1) = col3(k:k+1);
-        col4_trial(j:j+1,:) = col4(k:k+1,:);
-        col5_trial(j:j+1,:) = col5(k:k+1,:);
-    end
-    
-    
-    %adding block number triggers
-    col1_trial(1:4:end) = col1(1:2:end);  % stimulus timestamp values
-    col2_trial(:) = 1;
-    col3_trial(1:4:end,:) = conditions(:,4*cond(i)-2);  % block number
-    col4_trial =  string(col4_trial);
-    col4_trial(:) = 'Trig.';
-    col4_trial =  char(col4_trial);
-    col5_trial = string(col5_trial);
-    col5_trial(1:4:end) = string(conditions(:,4*cond(i)-2));  % block number
-    col5_trial = char(col5_trial);
-    
-    
-    
-    %adding trial number triggers
-    col1_trial(2:4:end) = col1(1:2:end);  % stimulus timestamp values
-    col2_trial(:) = 1; 
-    col3_trial(2:4:end,:) = repmat(101:116,1,16)' ; 
-    col4_trial =  string(col4_trial);
-    col4_trial(:) = 'Trig.';
-    col4_trial =  char(col4_trial);
-    col5_trial = string(col5_trial);
-    col5_trial(2:4:end) = string(repmat(1:16,1,16)');
-    col5_trial = char(col5_trial);
-    
     
     filename = strcat('D:\Stroop\Temp\pre_sobi\',sub_IDs{i},'_aux_NoBad_AvgRef_UpdatedTrigs.evt');
     fid = fopen(filename,'w');
     fprintf(fid,'Tmu\tCode\tTriNo\tComnt\n');
 
+    n_rows = n_rows_log*2; % for every trial, we have two triggers
+    
     for j = 1:n_rows
-        fprintf(fid, '%d\t%d\t%d\t%s\n', col1_trial(j), col2_trial(j), col3_trial(j), [col4_trial(j,:), col5_trial(j,:)]);
+        fprintf(fid, '%d\t%d\t%d\t%s\n', col1(j), col2(j), col3(j), [col4(j,:), col5(j,:)]);
     end
     
     fclose(fid);
     
-    name = strcat('D:\Stroop\Temp\pre_sobi\', sub_IDs{i},'_orig_triggers');
-    save(name,'old_triggers');
+
     
 end
 
