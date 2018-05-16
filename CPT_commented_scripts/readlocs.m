@@ -1,3 +1,5 @@
+% Last modified before Pranshul: 11th April 2012
+
 % readlocs() - read electrode location coordinates and other information from a file. 
 %              Several standard file formats are supported. Users may also specify 
 %              a custom column format. Defined format examples are given below 

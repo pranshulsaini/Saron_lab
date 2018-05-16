@@ -1,3 +1,5 @@
+% Last modified before Pranshul: 11th April 2014
+
 function [ V , D ] =  joint_diag(A, jthresh)   % A is of dimen 88 x (88*n_points)
 % function [ V , D ] =  joint_diag(A,jthresh,max_iter)
 % Joint approximate diagonalization

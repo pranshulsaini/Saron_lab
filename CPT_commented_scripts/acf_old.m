@@ -1,3 +1,5 @@
+% % Last modified before Pranshul: 20th feb 2013
+
 function results =  acf_old(x,k,p)
 % PURPOSE: Estimate the coefficients of the autocorrelation 
 %          (covariance with its own lagged value)

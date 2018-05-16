@@ -4,6 +4,8 @@
 % (irezazadeh@ucdavis.edu)
 %Chivon has changed the code to run with CPT task data. 
 
+% Last modified before Pranshul: 18th Feb 2015
+
 function y = tSOBI_CPT_betterSMART(eegfilename, eegfile, evtfile, sfpfile, outputDir, chunks)
  
     diary tSOBI_logFile;   % writes everything printed on the command window
@@ -54,6 +56,7 @@ function y = tSOBI_CPT_betterSMART(eegfilename, eegfile, evtfile, sfpfile, outpu
     Trialstep = [];
     %read the original triggers into tmu and trig variables and mark where
     %missing trials were.
+    % It is important to note that trig variable is not storing response (1) triggers because that is not included in the if condition below (P)
     for i = 1:1:size(origtrig,2)    % size(origtrig,2)  = 1032 (P)
         if origtrig(i) >100 && origtrig(i)<317   % I think this is for frequent trials (P)
             trig(end+1) = 2;    % so this is coded as 2 (P)
@@ -111,7 +114,7 @@ function y = tSOBI_CPT_betterSMART(eegfilename, eegfile, evtfile, sfpfile, outpu
         % output projection of each source in sensor space for the averaged epoch;             
         eST = createEvokedSourceTrial(hdr, W_scaled, eegfile, toiAll, 'CPT', eegfilename);  % 88 x 5530 (P)
 
-        %conditon/trigger specific evoked source potential (P)
+        %output projection of each source in sensor space for the averaged conditon/trigger specific epochs  (P)
         embeddedST = createEmbeddedEvokedSourceTrial(hdr, W_scaled, eegfile, toiAll, 'CPT',evtfile,eegfilename,trig,tmu); % 88 x (5530*2)
 
         % create HTML file using SMART
@@ -296,10 +299,10 @@ function sT = createEvokedSourceTrial(hdr, W, eegfile, toi, cond, eegfilename) %
         tmp = W*x;
         % demeaning the sources from -80: 20  msec (this is shifted by 1 sample also).
         tmp = tmp - mean(tmp(:,2908:3113),2)*ones(1,size(tmp,2));
-        sT = sT + tmp;   % sT is summing up source signal fo all blocks/epochs
+        sT = sT + tmp;   % sT is summing up source projection fo all blocks/epochs
     end
     
-    sT = sT./size(toi,1);
+    sT = sT./size(toi,1);  % scaling down because it contains the values added across all the trials (P)
 %     sT = sT * 1e3;
     [tmp1, tmp2, tmp3] = fileparts(eegfile);
     eegfile = tmp2; % without full path    

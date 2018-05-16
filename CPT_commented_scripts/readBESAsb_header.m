@@ -1,4 +1,5 @@
 %(P) means that the comments have been made by Pranshul
+% Last modified before Pranshul: 8th Sept 2014
 function hdr = readBESAsb_header(filename)
 
 fid=fopen([filename(1:end-4),'.generic'],'r');  % 'end-4' command removed 'dat'
