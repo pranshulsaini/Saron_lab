@@ -8,7 +8,7 @@ function tSOBI_STR_wrapper(xlsfilename)
     time_beg = cputime;
 
     addpath('C:\Users\plsaini\Box Sync\Stroop\Temp\matlab_scripts');
-    addpath('C:\Users\plsaini\Box Sync\Stroop\Temp\extra_matlab');
+    addpath('C:\Users\plsaini\Box Sync\Stroop\Temp\matlab_scripts\extra_required_codes');
     % read the XLS file
     [n, t, r] = xlsread(xlsfilename);
     

@@ -28,16 +28,15 @@ function reconEEGdata_contSTR_wrapper(xlsfilename)
     % r =   {' FILES TO BE RECONSTRUCTED'}       %(P)
     %       {'STR00412'                  }
 
-    
      
     % location of DAT, EVT and GENERIC files
     
+    %outloc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR00412_aux_NoBad_AvgRef_forSOBI\';
     
-    %OGdatloc = '\\Dss02721-cmb-d\c\forSOBI_RestingData\'; %location of original data files sent through SOBI
-    outloc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR00412_aux_NoBad_AvgRef_forSOBI\';
     % start from i = 2, since the first row is titles
     for i = 2:1:size(r,1)        % size(r,1) is (one + the number of subjects' data to be reconstructed )  (P)
         nameoffile = r{i,1};     % 'STR00412'  (P)
+        outloc = strcat('C:\Users\plsaini\Box Sync\Stroop\Temp\',nameoffile,'_aux_NoBad_AvgRef_forSOBI\');
         eegfile = strcat([nameoffile, '_aux_NoBad_AvgRef_forSOBI']); %  'STR00412_aux_NoBad_AvgRef_forSOBI'. No extension (P)        
         evtfile = strrep(eegfile, '.dat', '.evt');  % Does not work. Stays 'STR00412_aux_NoBad_AvgRef_forSOBI'. No extension added. I should comment it out  (P)
         sfpfile = strrep(eegfile, '.dat', '.sfp');  % Does not work. Stays 'STR00412_aux_NoBad_AvgRef_forSOBI'. No extension added. I should comment it out  (P)
@@ -72,7 +71,8 @@ function IntegrateResponseTrigs(nameoffile)  % nameoffile = 'STR00412_aux_NoBad_
     %eegfile = strcat(nameoffile, '_epoched_forSOBI'); %original
     eegfile = nameoffile; %changed for the test data. change back to orig for normal files
     resptrigevtfile = strcat(eegfile(1:8), '_1stPass.evt');    % removed 'for_SOBI' and added '_GoodTrials.evt' (P)
-    outloc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR00412_aux_NoBad_AvgRef_forSOBI\';   
+    %outloc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR00412_aux_NoBad_AvgRef_forSOBI\';   
+    outloc = strcat('C:\Users\plsaini\Box Sync\Stroop\Temp\',nameoffile,'\');
     recondataloc = strcat(outloc, [nameoffile, '_Sources_STR\'], [nameoffile, '_recon\']); % folder for reconstructed data (P)  'C:\Users\plsaini\Box Sync\Stroop\Temp\STR00412_aux_NoBad_AvgRef_forSOBI\STR00412_aux_NoBad_AvgRef_forSOBI_Sources_STR\STR00412_aux_NoBad_AvgRef_forSOBI_recon\'; 
     Trigdataloc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR_SOBI_data\';
  

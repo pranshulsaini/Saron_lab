@@ -87,8 +87,9 @@ function y = tSOBI_STR_betterSMART(eegfilename, eegfile, evtfile, sfpfile, outpu
 
         % Feed Correlation Matrices to Joint Diagonalization.
         [W, B, D] = jointDiagonalization(Rx, sinThreshold);  % If we multiply with W with the input data, we will get independent components. D (m x n*m)is the collection of almost diagonl matrices (P). B is pre-sphering matrix
+
         W_scaled = real(scaleW(W));     % I do not know why it is required (P)
-       
+        size(W_scaled)
         % output nSources x nTrials per condition; S = WX;            
         aST = createSourceTrials(hdr, W_scaled, eegfile, toiAll, 'STR', eegfilename, trig); %m x n_trial*epoch_time
 
@@ -148,11 +149,17 @@ function smart_autism(aST, eST, hdr, W, eegfile, toi, trig, cond, sfpfile)  % [a
     emgThreshold = 0.6;   % How are these thresholds decided? Is this what Cliff was talking about as 'classifier by Manish'?
     eogThreshold = 0.7;   % How are these thresholds decided? Is this what Cliff was talking about as 'classifier by Manish'?
    
-    el = readlocs(sfpfile);  % reads electrode location coordinates and other information from a file. (P)
+    update_sfp(sfpfile);   % removes the unnecessary rows in the beginning
+    
+    [tmp1, tmp2, tmp3] = fileparts(sfpfile); 
+    newsfpfile = strcat(tmp1,'\',tmp2,'_updated',tmp3);
+   
+    el = readlocs(newsfpfile);  % reads electrode location coordinates and other information from a file. (P)
     %output is a structure containing the channel names and locations (if present). It has three fields: 'eloc.labels', 'eloc.theta' and 'eloc.radius' (P)
     % I get this warning: coordinate conversion failed. However, the output seems fine. It has 5 columns: [electrode number, labels, X, Y, Z] (P)
     
     % calculate EMG components based on Auto-correlation function on the evoked (average) source trial.                ACF means autocorrelation function (P)
+
     [emgnew, ac] = findACFbasedEMG(aST, W, toi, emgThreshold);   % ac (dim: m X 64) contains mean autocorrelation coeff, and emgnew contains the list of found emg channels (P)
     
     
@@ -188,10 +195,10 @@ function [y acSt] = findACFbasedEMG(St, W, toi, thresh)  % ACF means autocorrela
              ac = acf_old(St(s, (t-1)*blockSize+1:t*blockSize)',64);  % Estimate the coefficients of the autocorrelation (covariance with its own lagged value). 64 is the max lag considered in digital values (P)
              acst(t,:) = ac.ac; % autocorrelation coefficients. Final size of acst would be: 256 x 64   (P)
         end
-        
+
         % average the acf for all trials for each source.
-        acSt(s,:) = mean(acst);    % Size of acSt for all sources: 88 x 64
-        
+        acSt(s,:) = mean(acst,1);    % Size of acSt for all sources: 88 x 64
+
         if min(acSt(s,1:20)) < thresh  % trying min instead of mean             Manish Saggar's paper figure shows that EMG autocorrelation decreases sharply with lag, unlike neural signals (P)
             y = [y s];          % source index is added as an emg channel (P)
         end
@@ -238,8 +245,8 @@ function [y pp psStNL freq] = findPeaks(St, hdr, W, toi)
         end
         
         % average the power spectrum for all trials for each source.
-        psSt(s,:) = 10*log10(mean(psst));   % In the end, psSt will have the dimension: m x 1351 (P)
-        psStNL(s,:) = mean(psst); % In the end, psSt will have the dimension: m x 1351 (P)
+        psSt(s,:) = 10*log10(mean(psst,1));   % In the end, psSt will have the dimension: m x 1351 (P)
+        psStNL(s,:) = mean(psst,1); % In the end, psSt will have the dimension: m x 1351 (P)
         freq = f; % I would have to write freq = f; (P)
 
         % to avoid error from findpeaks                    
@@ -434,44 +441,45 @@ function sT = createSourceTrials(hdr, W, eegfile, toi, cond, eegfilename, trig) 
         tmp = tmp - mean(tmp(:,348:553),2)*ones(1,size(tmp,2)); % As the my calculation, the time points for 1 trial are 4096, according;y [348, 553].
         sT(:, (t-1)*blockSize+1:t*blockSize) = tmp;  % storing independent source signal for all epochs (P) 
     end
-    
-    A = inv(W);  % This is required for reconstruction (P)
-    [tmp1, tmp2, tmp3] = fileparts(eegfile); % [filepath,name,ext] = fileparts(file) (P)
-     
-    eegfile = tmp2; % without full path  
-    clear tmp tmp1 tmp2 tmp3;
-    for s = 1:1:size(W,1)  % for each source
-        chData_tmp = zeros(size(W,1), size(toi,1)*blockSize);    %88 x n_trial*epoch_time (P)
-        for t = 1:1:size(toi,1)
-              
-           chData_tmp(:,(t-1)*blockSize+1:t*blockSize)= A(:,s)*sT(s,(t-1)*blockSize+1:t*blockSize);  % reconstructing original signal (P)
-           %chData_tmp(:,(t-1)*blockSize+1:(t*blockSize)-(blockSize/2))= A(:,s)*sT(s,(t-1)*blockSize+1:(t*blockSize)-(blockSize/2));
-           %chData_tmp(:,(t*blockSize)-(blockSize/2)+1:t*blockSize)= A(:,s)*sT(s,(t*blockSize)-(blockSize/2)+1:t*blockSize);
-           
-        end 
-        writeBESAsb_data(chData_tmp, strcat(eegfilename,'_',cond,'_Source_',num2str(s),'_Projection_Into_SensorSpace_AllTrials.dat'));    % writing reconstructed data file for each source (P)
-        clear chData_tmp   % I don't think it is required since it has been assigned zero in the beginning of the loop (P)
-    end 
-    
-    % creating event file for sensorspace projection files
-    fid = fopen(strcat(eegfilename,'_',cond,'_SensorSpace_AllTrials.evt'),'w');  % timestamp will not be actual timestamp
-    fid2 = fopen(strcat(eegfilename,'_',cond,'_SensorSpace_AllTrialsTrigs.evt'),'w'); % timestamp will not be actual timestamp
-    
-    if fid == -1
-        fprintf(1,'Error creating Event File for Source Trials\n');
-    end
-    
-    fprintf(fid,'Tmu\tCode\tTriNo\tComnt\n');
-    fprintf(fid2,'Tmu\tCode\tTriNo\tComnt\n');
-    
-    for t = 1:1:size(toi,1)   % I didn't understand the need to create these files (P)
-         %fprintf(fid, '%d\t%d\t%d\t%s\n', toi(t,1)*1e3, 1, t, strcat('Trial:',num2str(t)));
-        fprintf(fid, '%d\t%d\t%d\t%s\n', ((t-1)*(blockSize/2048)*1e6+1), 1, t, strcat('Trial:',num2str(t)));    % this line has t. The tmu here will not be actual tmu   (P)
-        fprintf(fid2, '%d\t%d\t%d\t%s\n', ((t-1)*(blockSize/2048)*1e6+1), 1, trig(t), strcat('Trial:',num2str(t)));  % this line has trig(t). The tmu here will not be actual tmu   (P)
-    end
-    
-    fclose(fid);
-    fclose(fid2);
+
+% I am commenting it (Pranshul). I think it wastes a lot of memory and processing time as well
+%     A = inv(W);  % This is required for reconstruction (P)
+%     [tmp1, tmp2, tmp3] = fileparts(eegfile); % [filepath,name,ext] = fileparts(file) (P)
+%      
+%     eegfile = tmp2; % without full path  
+%     clear tmp tmp1 tmp2 tmp3;
+%     for s = 1:1:size(W,1)  % for each source
+%         chData_tmp = zeros(size(W,1), size(toi,1)*blockSize);    %88 x n_trial*epoch_time (P)
+%         for t = 1:1:size(toi,1)
+%               
+%            chData_tmp(:,(t-1)*blockSize+1:t*blockSize)= A(:,s)*sT(s,(t-1)*blockSize+1:t*blockSize);  % reconstructing original signal (P)
+%            %chData_tmp(:,(t-1)*blockSize+1:(t*blockSize)-(blockSize/2))= A(:,s)*sT(s,(t-1)*blockSize+1:(t*blockSize)-(blockSize/2));
+%            %chData_tmp(:,(t*blockSize)-(blockSize/2)+1:t*blockSize)= A(:,s)*sT(s,(t*blockSize)-(blockSize/2)+1:t*blockSize);
+%            
+%         end 
+%         writeBESAsb_data(chData_tmp, strcat(eegfilename,'_',cond,'_Source_',num2str(s),'_Projection_Into_SensorSpace_AllTrials.dat'));    % writing reconstructed data file for each source (P)
+%         clear chData_tmp   % I don't think it is required since it has been assigned zero in the beginning of the loop (P)
+%     end 
+%     
+%     % creating event file for sensorspace projection files
+%     fid = fopen(strcat(eegfilename,'_',cond,'_SensorSpace_AllTrials.evt'),'w');  % timestamp will not be actual timestamp
+%     fid2 = fopen(strcat(eegfilename,'_',cond,'_SensorSpace_AllTrialsTrigs.evt'),'w'); % timestamp will not be actual timestamp
+%     
+%     if fid == -1
+%         fprintf(1,'Error creating Event File for Source Trials\n');
+%     end
+%     
+%     fprintf(fid,'Tmu\tCode\tTriNo\tComnt\n');
+%     fprintf(fid2,'Tmu\tCode\tTriNo\tComnt\n');
+%     
+%     for t = 1:1:size(toi,1)   % I didn't understand the need to create these files (P)
+%          %fprintf(fid, '%d\t%d\t%d\t%s\n', toi(t,1)*1e3, 1, t, strcat('Trial:',num2str(t)));
+%         fprintf(fid, '%d\t%d\t%d\t%s\n', ((t-1)*(blockSize/2048)*1e6+1), 1, t, strcat('Trial:',num2str(t)));    % this line has t. The tmu here will not be actual tmu   (P)
+%         fprintf(fid2, '%d\t%d\t%d\t%s\n', ((t-1)*(blockSize/2048)*1e6+1), 1, trig(t), strcat('Trial:',num2str(t)));  % this line has trig(t). The tmu here will not be actual tmu   (P)
+%     end
+%     
+%     fclose(fid);
+%     fclose(fid2);
 
     % writing the source space data into files
     %     sT = sT * 1e3;    
@@ -707,7 +715,7 @@ function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond
         %figure('Visible','off','Position',[1 1 2432 288]); %creates output based on a 1920 x 1200 screen resolution
         subplot(1,7,1), topoplot(A(:,eog(i)), el, 'electrodes', 'off');
         %subplot(1,7,2), semilogy(freq(1:windowfreqxaxis), Sps(eog(i),1:windowfreqxaxis)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
-        subplot(1,7,2), semilogy(mean(Sps(:,1:windowfreqxaxis))); hold 'on'; plot(Sps(eog(i),1:windowfreqxaxis),'r'); axis 'tight'; set(gca,'XTick',[1; 60; 120; 241]); set(gca,'XTickLabel',[1;30;60;120]);        
+        subplot(1,7,2), semilogy(mean(Sps(:,1:windowfreqxaxis))); hold 'on'; plot(Sps(eog(i),1:windowfreqxaxis),'r'); axis 'tight'; set(gca,'XTick',[1; round(windowfreqxaxis/4); round(windowfreqxaxis/2); round(windowfreqxaxis)]); set(gca,'XTickLabel',[1;30;60;120]);       
         
         %subplot(1,7,3), loglog(freq(1:104), Sps(eog(i),1:104)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
         subplot(1,7,3), loglog(freq(1:windowfreqxaxis), Sps(eog(i),1:windowfreqxaxis)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
@@ -772,7 +780,7 @@ function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond
         %figure('Visible','off','Position',[1 1 2432 288]); %creates output based on a 1920 x 1200 screen resolution
         subplot(1,7,1), topoplot(A(:,peaks(i)), el, 'electrodes', 'off');
         %subplot(1,7,2), semilogy(freq(1:windowfreqxaxis), Sps(peaks(i),1:windowfreqxaxis)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
-       subplot(1,7,2), semilogy(mean(Sps(:,1:windowfreqxaxis))); hold 'on'; plot(Sps(peaks(i),1:windowfreqxaxis),'r'); axis 'tight'; set(gca,'XTick',[1; 60; 120; 241]); set(gca,'XTickLabel',[1;30;60;120]);        
+       subplot(1,7,2), semilogy(mean(Sps(:,1:windowfreqxaxis))); hold 'on'; plot(Sps(peaks(i),1:windowfreqxaxis),'r'); axis 'tight'; set(gca,'XTick',[1; round(windowfreqxaxis/4); round(windowfreqxaxis/2); round(windowfreqxaxis)]); set(gca,'XTickLabel',[1;30;60;120]);        
         
         %subplot(1,7,3), loglog(freq(1:104), Sps(peaks(i),1:104)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
         subplot(1,7,3), loglog(freq(1:windowfreqxaxis), Sps(peaks(i),1:windowfreqxaxis)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
@@ -835,7 +843,7 @@ function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond
         %figure('Visible','off','Position',[1 1 2432 288]); %creates output based on a 1920 x 1200 screen resolution
         subplot(1,7,1), topoplot(A(:,normal(i)), el, 'electrodes', 'off');
         %subplot(1,7,2), semilogy(freq(1:windowfreqxaxis), Sps(normal(i),1:windowfreqxaxis)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
-        subplot(1,7,2), semilogy(mean(Sps(:,1:windowfreqxaxis))); hold 'on'; plot(Sps(normal(i),1:windowfreqxaxis),'r'); axis 'tight'; set(gca,'XTick',[1; 60; 120; 241]); set(gca,'XTickLabel',[1;30;60;120]);        
+        subplot(1,7,2), semilogy(mean(Sps(:,1:windowfreqxaxis))); hold 'on'; plot(Sps(normal(i),1:windowfreqxaxis),'r'); axis 'tight'; set(gca,'XTick',[1; round(windowfreqxaxis/4); round(windowfreqxaxis/2); round(windowfreqxaxis)]); set(gca,'XTickLabel',[1;30;60;120]);        
         
         %subplot(1,7,3), loglog(freq(1:104), Sps(normal(i),1:104)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
         subplot(1,7,3), loglog(freq(1:windowfreqxaxis), Sps(normal(i),1:windowfreqxaxis)); axis 'tight'; set(gca,'YMinorTick','on'); set(gca,'XMinorTick','on');
@@ -900,7 +908,7 @@ function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond
     
    % print the HTML file
     fid = fopen('ArtifactsHTML.html','w');
-    fprintf(fid, '\n<HTML>\n<TITLE>%s</TITLE>\n<BODY>\n <form action="http://localhost/cgi-bin/poll.cgi" method="POST">\n<TABLE border=1>\n', strcat(HTMLtitle,'_',cond));
+    fprintf(fid, '\n<HTML>\n<TITLE>%s</TITLE>\n<BODY>\n <form action="http://localhost/cgi-bin/poll.cgi" method="POST">\n<TABLE border=1>\n', strcat(HTMLtitle,'_',cond)); % "http://www.rebol.com/cgi-bin/test-cgi.cgi" works
     fprintf(fid, '<input type="text" name="filename", value=%s>\n',strcat(strrep(HTMLtitle,' ',''),'_',cond));
     fprintf(fid, '<input type="text" name="nsources", value=%s>\n',num2str(size(St,1)));
     

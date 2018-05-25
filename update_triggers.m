@@ -3,7 +3,7 @@ clear all;
 %online link: https://www.mathworks.com/matlabcentral/answers/306876-how-do-i-read-only-a-specific-line-while-reading-a-text-file-in-matlab
 %online link: https://www.mathworks.com/matlabcentral/answers/339342-how-to-read-a-letter-from-a-string-in-a-cell
 
-sub_IDs = importdata('D:\Stroop\Temp\Subject_IDs.txt');
+sub_IDs = importdata('C:\Users\plsaini\Box Sync\Stroop\Temp\Subject_IDs.txt');
 num_sub = size(sub_IDs,1);
 cond = zeros(num_sub,1);
 
@@ -14,7 +14,8 @@ conditions = cell2mat(struct2cell(conditions));
 
 for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w log and event file
     i
-    filename = strcat('D:\Stroop\Temp\log_files\',sub_IDs{i},'.txt'); % log file
+    sub_IDs{i} = strrep(sub_IDs{i},'.bdf','');
+    filename = strcat('C:\Users\plsaini\Box Sync\Stroop\Temp\log_files\',sub_IDs{i},'.txt'); % log file
     fid=fopen(filename);
     linenum = 7;      % This line number has condition written
     C = textscan(fid,'%s',1,'delimiter','\n', 'headerlines',linenum-1);
