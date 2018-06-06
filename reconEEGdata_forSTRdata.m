@@ -68,7 +68,7 @@ function artifacts = findArtifacts(outfile)   % will return the channels assigne
     else
         %C:\Users\plsaini\Box Sync\Stroop\Temp\STR00412_aux_NoBad_AvgRef_forSOBI\STR00412_aux_NoBad_AvgRef_forSOBI_Sources_STR\STR00412_aux_NoBad_AvgRef_forSOBI
         for i = 1:1:size(data,1)  % across 88 channels (P)
-            ln = strsplit(' ',data{i,1});  % 
+            ln = strsplit(data{i,1},' ' );  % 
             if strcmp(ln(2), 'emg') == 1 || strcmp(ln(2), 'peaks') == 1 || strcmp(ln(2), 'eog') == 1 || strcmp(ln(2), 'Reog') == 1
                 artifacts = [artifacts str2num(cell2mat(ln(1)))];   % the channel number added as an artifact (P)
             end

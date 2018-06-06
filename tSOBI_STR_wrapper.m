@@ -7,16 +7,16 @@
 function tSOBI_STR_wrapper(xlsfilename)
     time_beg = cputime;
 
-    addpath('C:\Users\plsaini\Box Sync\Stroop\Temp\matlab_scripts');
-    addpath('C:\Users\plsaini\Box Sync\Stroop\Temp\matlab_scripts\extra_required_codes');
+    addpath('C:\Users\plsaini\Box Sync\Stroop\matlab_scripts');
+    addpath('C:\Users\plsaini\Box Sync\Stroop\matlab_scripts\extra_required_codes');
     % read the XLS file
     [n, t, r] = xlsread(xlsfilename);
     
     % location of DAT, EVT and GENERIC files
-    datloc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR_SOBI_data\';
+    datloc = 'C:\Users\plsaini\Box Sync\Stroop\STR_SOBI_data\';
     
     % location of sfp files
-    sfploc = 'C:\Users\plsaini\Box Sync\Stroop\Temp\STR_SOBI_data\';
+    sfploc = 'C:\Users\plsaini\Box Sync\Stroop\STR_SOBI_data\';
     
     % start from i = 2, since the first row is header
     for i = 2:1:size(r,1)
@@ -28,7 +28,7 @@ function tSOBI_STR_wrapper(xlsfilename)
 
         % create folder for each subject
         output = strrep(r{i,1}, '.dat', ''); % name of the folder
-        outputDir = strcat('C:\Users\plsaini\Box Sync\Stroop\Temp\',output);
+        outputDir = strcat('C:\Users\plsaini\Box Sync\Stroop\STR_SOBI_Output\',output);
         if exist(outputDir,'dir') ~= 7   % it returns 7 if outputDir exists as a folder
            fprintf(1, '\nA directory for the subject (%s) doesn''t exist, Creating one...',output);
            mkdir(outputDir);

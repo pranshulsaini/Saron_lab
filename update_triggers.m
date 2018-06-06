@@ -3,19 +3,19 @@ clear all;
 %online link: https://www.mathworks.com/matlabcentral/answers/306876-how-do-i-read-only-a-specific-line-while-reading-a-text-file-in-matlab
 %online link: https://www.mathworks.com/matlabcentral/answers/339342-how-to-read-a-letter-from-a-string-in-a-cell
 
-sub_IDs = importdata('C:\Users\plsaini\Box Sync\Stroop\Temp\Subject_IDs.txt');
+sub_IDs = importdata('C:\Users\plsaini\Box Sync\Stroop\Subject_IDs.txt');
 num_sub = size(sub_IDs,1);
 cond = zeros(num_sub,1);
 
 % 8 condition sequences. There are eight different orders of sequences and each has been assigned four columns in the excel file. The first column is
 % the condition{-1,0,-1} for trials, the second one is the block number [1-16], the third one as block type {-1,0,1}, and the fourth one as blank col
-conditions = importdata('D:\Stroop\Temp\conditions_sorted.xlsx');
+conditions = importdata('C:\Users\plsaini\Box Sync\Stroop\conditions_sorted.xlsx');
 conditions = cell2mat(struct2cell(conditions));
 
 for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w log and event file
     i
     sub_IDs{i} = strrep(sub_IDs{i},'.bdf','');
-    filename = strcat('C:\Users\plsaini\Box Sync\Stroop\Temp\log_files\',sub_IDs{i},'.txt'); % log file
+    filename = strcat('C:\Users\plsaini\Box Sync\Stroop\Logfiles\',sub_IDs{i},'.txt'); % log file
     fid=fopen(filename);
     linenum = 7;      % This line number has condition written
     C = textscan(fid,'%s',1,'delimiter','\n', 'headerlines',linenum-1);
@@ -25,13 +25,13 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     
     
     %link: https://www.mathworks.com/help/matlab/ref/textscan.html
-    filename = strcat('D:\Stroop\Temp\pre_sobi\',sub_IDs{i},'_aux_NoBad_AvgRef_OrigTrigs.evt');
+    filename = strcat('C:\Users\plsaini\Box Sync\Stroop\pre_SOBI\',sub_IDs{i},'_aux_NoBad_AvgRef_OrigTrigs.evt');
     fid = fopen(filename,'r');
     MyText = textscan(fid,'%d %d %d %s %d','headerlines',1);   % will scan the whole text of the event file. First line will be assumed as heading
     fclose(fid);
     
     %log_file
-    filename = strcat('D:\Stroop\Temp\log_files\',sub_IDs{i},'.txt'); 
+    filename = strcat('C:\Users\plsaini\Box Sync\Stroop\Logfiles\',sub_IDs{i},'.txt'); 
     fid = fopen(filename);
     log_file = textscan(fid,'%d %s %s %s %d %d','headerlines',98);
     stim = log_file{1,3}(:);
@@ -100,7 +100,7 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     
     % writing the corrected original trigger file where we have extracted
     % the missing responses from the log file.
-    name = strcat('D:\Stroop\Temp\pre_sobi\', sub_IDs{i},'_orig_triggers');
+    name = strcat('C:\Users\plsaini\Box Sync\Stroop\pre_SOBI\', sub_IDs{i},'_orig_triggers');
     save(name,'old_triggers');
     
     
@@ -121,7 +121,7 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     
 
     
-    filename = strcat('D:\Stroop\Temp\pre_sobi\',sub_IDs{i},'_aux_NoBad_AvgRef_UpdatedTrigs.evt');
+    filename = strcat('C:\Users\plsaini\Box Sync\Stroop\pre_SOBI\',sub_IDs{i},'_aux_NoBad_AvgRef_UpdatedTrigs.evt');
     fid = fopen(filename,'w');
     fprintf(fid,'Tmu\tCode\tTriNo\tComnt\n');
 

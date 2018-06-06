@@ -100,7 +100,7 @@ function y = tSOBI_STR_betterSMART(eegfilename, eegfile, evtfile, sfpfile, outpu
         embeddedST = createEmbeddedEvokedSourceTrial(hdr, W_scaled, eegfile, toiAll, 'STR',evtfile,eegfilename,trig,tmu); % m x (4096*5)
 
         % create HTML file using SMART
-        smart_autism(aST, eST, hdr, W_scaled, eegfilename, toiAll, trigAll, 'STR', sfpfile);
+        smart_autism(aST, eST, hdr, W_scaled, eegfilename, toiAll, trigAll, 'STR', sfpfile, outputDir);
         % The above command writes aST, eST, new EOG and EMG artifact information, new peaks around power noise,... all that in the HTML file (P)
         
     else               % I have not gone through this because I think we will also keep chunks =1 for Stroop data
@@ -138,14 +138,14 @@ function y = tSOBI_STR_betterSMART(eegfilename, eegfile, evtfile, sfpfile, outpu
             %eSTembedded = createEmbeddedEvokedSourceTrial(hdr, W_scaled, eegfile, toiAll_trls{i}, strcat('ACC',num2str(i)));
 
             % create HTML file using SMART
-            smart_autism(aST, eST, hdr, W_scaled, eegfile, toiAll_trls{i}, trigAll_trgs{i}, strcat('ACC',num2str(i)), sfpfile);
+            smart_autism(aST, eST, hdr, W_scaled, eegfile, toiAll_trls{i}, trigAll_trgs{i}, strcat('ACC',num2str(i)), sfpfile, outputDir);
         end
     end
     diary off;             
 end
 
 
-function smart_autism(aST, eST, hdr, W, eegfile, toi, trig, cond, sfpfile)  % [aST, eST, hdr, W_scaled, eegfilename, toiAll, trigAll, 'STR', sfpfile]
+function smart_autism(aST, eST, hdr, W, eegfile, toi, trig, cond, sfpfile, outputDir)  % [aST, eST, hdr, W_scaled, eegfilename, toiAll, trigAll, 'STR', sfpfile]
     emgThreshold = 0.6;   % How are these thresholds decided? Is this what Cliff was talking about as 'classifier by Manish'?
     eogThreshold = 0.7;   % How are these thresholds decided? Is this what Cliff was talking about as 'classifier by Manish'?
    
@@ -177,7 +177,7 @@ function smart_autism(aST, eST, hdr, W, eegfile, toi, trig, cond, sfpfile)  % [a
     [tmp1, tmp2, tmp3] = fileparts(eegfile); 
     eegfile = tmp2; % without full path
     printHTML(emgnew, eognew, peaksnew, peaks, ac, el, W, Sps, aST, eST,...
-        eegfile, cond, freq, toi); 
+        eegfile, cond, freq, toi, outputDir); 
     
     save(strcat(strrep(eegfile,'.dat',''),'_',cond,'_W'),'W','aST','toi','trig');   % It will create the file and store 'W','aST','toi','trig' in that (P)
 end
@@ -607,7 +607,7 @@ function W_scaled = scaleW(W_unscaled)
 end
 
 
-function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond, freq, toi)           % I didn't read it. MIght ask Chivon if it is required or not
+function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond, freq, toi,outputDir)           % I didn't read it. MIght ask Chivon if it is required or not
     
     subjid=strrep(HTMLtitle,'.dat','');
     output = strcat(subjid,'smarter_',cond);
@@ -968,7 +968,8 @@ function printHTML(emg, eog, peaks, pf, ac, el, W, Sps, St, eST, HTMLtitle, cond
     fprintf(fid, '\n</TABLE><input type="submit" value="Vote"></BODY></HTML>');
     
     fclose(fid);
-    xlswrite(strcat(strrep(HTMLtitle, '.dat',''),'_voteforrecon.xlsx'),sourceorder');
+    xlswrite(strcat(outputDir, '\',strrep(HTMLtitle, '.dat',''),'_voteforrecon.xlsx'),sourceorder');
+    csvwrite(strcat(strrep(HTMLtitle, '.dat',''),'_voteforrecon.xlsx'),sourceorder');
     cd('..');    
 end
 

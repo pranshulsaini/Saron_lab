@@ -10,14 +10,14 @@ function write_SOBIxlsx(inloc, outloc, name)
 
 
     x = strings(length(fileList),1);
-    for i = 1:length(fileList)
+    for i = 1: length(fileList)
         x(i) = fileList{i};
     end
     
     data = strings(length(fileList),2);
 
 
-    tmp = strrep(x,'.bdf','write');
+    tmp = strrep(x,'.bdf','');
     data(:,1) = tmp + '_aux_NoBad_AvgRef_forSOBI.dat';
     data(:,2) = tmp + '_aux_NoBad_AvgRef_forSOBI.sfp';
 
