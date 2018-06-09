@@ -57,13 +57,33 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     col4 = strings(2*n_rows_log,1);
     col5 = zeros(2*n_rows_log,1);
     
+    
     %copy data to the columns 
     n_rows_evt = length(MyText{1,3}(:));
     q= 1; % to write stimuli in column files
     r = 2; % to write responses in column files
     s= 1;  % to extract responses from logfile
+    
+    n_rows_stim = 0;
+    ind = [];
     for p = last_31+1: n_rows_evt
         if ((MyText{1,3}(p)== 12) || (MyText{1,3}(p)== 5) || (MyText{1,3}(p)== 6) || (MyText{1,3}(p)== 20))  % only copy stimuli from event files
+            
+            % to check if the stimuli presented are same across logfile and event file
+            if color2code_stim(log_file{1,3}(s)) ~= MyText{1,3}(p)
+                disp('ERROR: Stimuli are not matched between log and event file. Check!!!!!');
+                ind(end+1) = s; % I have to remove this condition from the stimuli sequences later on
+                s = s +1;
+                
+                if color2code_stim(log_file{1,3}(s)) == MyText{1,3}(p)
+                    disp('The problem is fixed')
+                else
+                    disp('The problem not solved');
+                end
+   
+            end
+            
+    
             col1(q) = MyText{1,1}(p);  % stimulus time stamp
             col1(r) = col1(q) + 1000* log_file{1,5}(s);  % bcz log file reaction time is in ms
             
@@ -88,9 +108,15 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
             q = q+2;  % will write only in odd rows
             r = r+2; % will write only in even rows 
             s = s+1; 
+            n_rows_stim = n_rows_stim +1; % to find out the number of stimuli found in the original event file (usually they would be 256 after the loop ends)
+           
         end
     end
    
+    if s ~= 257
+        disp('The number of stimuli in event file are not 256. This is erroneous');
+    end
+    
     col4 = cell2mat(col4);
     col5 = num2str(col5);
     
@@ -103,6 +129,7 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     name = strcat('C:\Users\plsaini\Box Sync\Stroop\pre_SOBI\', sub_IDs{i},'_orig_triggers');
     save(name,'old_triggers');
     
+    n_rows = n_rows_stim*2; % for every trial, we have two triggers
     
     % updating triggers. 
     cond_seq = (conditions(:,4*cond(i)-3) + conditions(:,4*cond(i)-1) + 3)*1000; % the sum of 1st two terms lead to -2(incongruent), -1 (neutral in incongruent), 0 (neutral in neutral)
@@ -111,11 +138,17 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     %Now we will encode trial numbers in this sequence
     cond_seq = cond_seq + repmat(1:128,1,2)';
     
-    col3(1:2:end) = cond_seq;  % updating values for stimulus rows
-    col3(2:2:end) = outcome;  % it accounts for none values as well
+    %deleting those conditions whose corresponding stimuli were not in event file. This happens rarely but some files are screwed up.
+    cond_seq(ind) = [];
+    
+    %deleting responses corresponding to non-existing stimuli in the original event file
+    outcome(ind) = [];
+    
+    col3(1:2:n_rows) = cond_seq;  % updating values for stimulus rows
+    col3(2:2:n_rows) = outcome;  % it accounts for none values as well
     col5 = string(col5); % necessary because char arrays are two dimensional which causes problems in copying values from outcome and cond_seq
-    col5(1:2:end) = string(cond_seq); % updating values for stimulus rows
-    col5(2:2:end) = string(outcome);
+    col5(1:2:n_rows) = string(cond_seq); % updating values for stimulus rows
+    col5(2:2:n_rows) = string(outcome);
     col5 = char(col5); % reconversion otherwise there was a problem in print file
     
     
@@ -124,9 +157,7 @@ for i = 1:num_sub % 2nd file has incomplete event file. So a mismatch arises b/w
     filename = strcat('C:\Users\plsaini\Box Sync\Stroop\pre_SOBI\',sub_IDs{i},'_aux_NoBad_AvgRef_UpdatedTrigs.evt');
     fid = fopen(filename,'w');
     fprintf(fid,'Tmu\tCode\tTriNo\tComnt\n');
-
-    n_rows = n_rows_log*2; % for every trial, we have two triggers
-    
+ 
     for j = 1:n_rows
         fprintf(fid, '%d\t%d\t%d\t%s\n', col1(j), col2(j), col3(j), [col4(j,:), col5(j,:)]);
     end
