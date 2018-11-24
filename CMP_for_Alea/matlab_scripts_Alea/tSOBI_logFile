@@ -1,0 +1,32 @@
+{Not enough input arguments.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('tSOBI_STR_betterSMART', 'C:\Users\plsaini\Box Sync\Stroop\Temp\matlab_scripts\tSOBI_STR_betterSMART.m', 13)" style="font-weight:bold">tSOBI_STR_betterSMART</a> (<a href="matlab: opentoline('C:\Users\plsaini\Box Sync\Stroop\Temp\matlab_scripts\tSOBI_STR_betterSMART.m',13,0)">line 13</a>)
+    eegfile = strtrim(eegfile);  % removes leading and trailing whitespace characters from txt
+} 
+tryy
+tryy
+tryy
+tryy
+tryy
+{Not enough input arguments.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('tSOBI_STR_betterSMART', 'C:\Users\plsaini\Box Sync\Stroop\matlab_scripts\tSOBI_STR_betterSMART.m', 13)" style="font-weight:bold">tSOBI_STR_betterSMART</a> (<a href="matlab: opentoline('C:\Users\plsaini\Box Sync\Stroop\matlab_scripts\tSOBI_STR_betterSMART.m',13,0)">line 13</a>)
+    eegfile = strtrim(eegfile);  % removes leading and trailing whitespace characters from txt
+} 
+tSOBI_STR_wrapper('C:\Users\plsaini\Box Sync\Stroop\','STR_SOBIfiles.xlsx');
+{Error using <a href="matlab:matlab.internal.language.introspective.errorDocCallback('tSOBI_STR_wrapper')" style="font-weight:bold">tSOBI_STR_wrapper</a>
+Too many input arguments.
+} 
+tSOBI_STR_wrapper('C:\Users\plsaini\Box Sync\Stroop\STR_SOBIfiles.xlsx');
+
+A directory for the subject (STR07811_aux_NoBad_AvgRef_forSOBI) doesn't exist, Creating one...{Not enough input arguments.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('tSOBI_CMP_betterSMART', 'C:\Alea\matlab_scripts\tSOBI_CMP_betterSMART.m', 13)" style="font-weight:bold">tSOBI_CMP_betterSMART</a> (<a href="matlab: opentoline('C:\Alea\matlab_scripts\tSOBI_CMP_betterSMART.m',13,0)">line 13</a>)
+    eegfile = strtrim(eegfile);  % removes leading and trailing whitespace characters from txt
+} 
+tryy
+tryy
+tryy
+tSOBI_CMP_wrapper('C:\Alea\CMP_SOBIfiles.xlsx')
+
+A directory for the subject already exists, Overwriting...
